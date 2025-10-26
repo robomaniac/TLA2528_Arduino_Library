@@ -4,8 +4,8 @@
  * A clean, efficient library for the Texas Instruments TLA2528
  * 8-channel, 12-bit ADC with GPIO and software PWM capabilities.
  * 
- * @author  Your Name
- * @version 2.0.0
+ * @author  Jerome Demers
+ * @version 1.0.0
  * @license MIT
  */
 

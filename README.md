@@ -1,20 +1,18 @@
 # TLA2528 Arduino Library
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Arduino](https://img.shields.io/badge/arduino-%3E%3D1.8.0-brightgreen.svg)
 
-A powerful, clean Arduino library for the Texas Instruments TLA2528 - an 8-channel, 12-bit ADC with GPIO and software PWM capabilities. Transform your I²C bus into a versatile I/O expansion system.
+Arduino library for the Texas Instruments TLA2528 - an 8-channel, 12-bit ADC with GPIO and software PWM capabilities. Transform your I²C bus into a versatile I/O expansion system.
 
 ## ✨ Features
 
 - **🎯 Simple Arduino-style API** - Familiar `pinMode()`, `digitalWrite()`, `digitalRead()`, `analogWrite()`, `analogRead()` functions
 - **📊 12-bit ADC Resolution** - 4096 levels for precise analog measurements
 - **💡 Software PWM** - Smooth LED dimming and brightness control
-- **⚡ Optimized I²C** - Automatic speed negotiation (1MHz/400kHz)
 - **🔄 Efficient Updates** - Batched I²C transactions for optimal performance
-- **🎨 Gamma Correction** - Built-in LED brightness linearization
-- **🛡️ Robust Error Handling** - Graceful failure recovery
+
 
 ## 🚀 Quick Start
 
@@ -62,30 +60,18 @@ void loop() {
 2. In Arduino IDE: **Sketch** → **Include Library** → **Add .ZIP Library...**
 3. Select the downloaded file
 
-### PlatformIO
-Add to `platformio.ini`:
-```ini
-lib_deps = 
-    https://github.com/yourusername/TLA2528-Arduino
-```
 
 ## 🔌 Hardware Setup
 
 ### Basic Connections
 
-| TLA2528 Pin | Arduino | Notes |
-|------------|---------|--------|
-| VCC | 3.3V | 2.7V to 5.5V supported |
-| GND | GND | Common ground |
-| SDA | SDA | I²C data (4.7kΩ pull-up) |
-| SCL | SCL | I²C clock (4.7kΩ pull-up) |
-| A0 | 3.3V/GND | I²C address selection |
+todo - schematic
 
 ### I²C Address Configuration
 
-The TLA2528 address is set by the A0 pin:
-- A0 = GND: Address `0x10` (default)
-- A0 = VCC: Address `0x11`
+The TLA2528 address according to datasheet is 0x17 but when I use the I2C scan it return 0x10
+- Address `0x10` (default)
+
 
 ### ⚠️ Important Notes
 
@@ -159,19 +145,11 @@ Configure software PWM parameters.
 
 The library includes comprehensive examples:
 
-- **AnalogRead** - Basic analog input reading
-- **DigitalIO** - Button input with LED control
-- **PWMLEDControl** - Smooth LED dimming with potentiometer
-- **CompleteDemo** - All features demonstration
+- **TLA2528_AnalogReadSerial.ino** - Basic analog input reading
+- **TLA2528_DigitalReadWrite.ino** - Button input with LED control
+- **TLA2528_Basic_Example.ino** - Don't let the name fool you, this is cool demo of all features
 
 ## 🎯 Use Cases
-
-### Perfect For:
-- 🎮 Control panels and button matrices
-- 💡 LED lighting control
-- 📊 Sensor monitoring systems
-- 🏠 Home automation projects
-- 🤖 Robotics I/O expansion
 
 ### Not Recommended For:
 - High-speed PWM (>1kHz)
@@ -198,8 +176,8 @@ TLA2528 expander1, expander2;
 
 void setup() {
   Wire.begin();
-  expander1.begin(0x10);  // A0 = GND
-  expander2.begin(0x11);  // A0 = VCC
+  expander1.begin(0x10); 
+  expander2.begin(0x11);  
 }
 ```
 
@@ -214,7 +192,7 @@ void setup() {
 }
 ```
 
-## 🐛 Troubleshooting
+## 🐥 Troubleshooting
 
 ### Device Not Found
 - Check I²C connections and pull-up resistors
@@ -230,11 +208,10 @@ void setup() {
 
 ### Analog Read Issues
 - Verify pin is configured as `IO_ANALOG`
-- Check reference voltage
-- Add capacitor for noise filtering
-- Ensure stable power supply
 
 ## 📈 Performance
+
+todo - will add logic analyzer pictures
 
 | Operation | Typical Time | I²C Transactions |
 |-----------|-------------|------------------|
@@ -262,18 +239,15 @@ This library is released under the MIT License. See [LICENSE](LICENSE) file for 
 
 ## 🙏 Acknowledgments
 
-- Texas Instruments for the excellent TLA2528 chip
-- The Arduino community for inspiration and support
-- All contributors who help improve this library
+- Gemini and Claude for vibe coding this as you can tell from this amazing readme
 
 ## 📮 Support
 
-- 📧 Report issues on [GitHub Issues](https://github.com/yourusername/TLA2528-Arduino/issues)
-- 💬 Join discussions on [GitHub Discussions](https://github.com/yourusername/TLA2528-Arduino/discussions)
-- 📖 Read the [datasheet](https://www.ti.com/product/TLA2528)
+- 📧 Report issues on [GitHub Issues](https://github.com/robomaniac/TLA2528-Arduino/issues)
+- 💬 Join discussions on [GitHub Discussions](https://github.com/robomaniac/TLA2528-Arduino/discussions)
+- 📖 Read the [datasheet](https://github.com/robomaniac/TLA2528_Arduino_Library/tree/main/documents)
 
 ---
 
 **Made with ❤️ for the Arduino community**
 
-*Transform your projects with powerful I/O expansion!*

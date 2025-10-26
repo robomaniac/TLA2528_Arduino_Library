@@ -1,8 +1,8 @@
 /**
  * TLA2528 Arduino Library - Implementation
  * 
- * @author  Your Name
- * @version 2.0.0
+ * @author  Jerome Demers
+ * @version 1.0.0
  * @license MIT
  */
 
