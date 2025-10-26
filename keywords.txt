@@ -1,0 +1,36 @@
+# Syntax highlighting for TLA2528 library
+# KEYWORD1 = datatypes/classes (orange)
+# KEYWORD2 = methods/functions (orange) 
+# KEYWORD3 = structures (orange)
+# LITERAL1 = constants (blue)
+
+# Classes
+TLA2528	KEYWORD1
+TLA2528_IO	KEYWORD1
+PWMConfig	KEYWORD1
+
+# Methods
+begin	KEYWORD2
+isConnected	KEYWORD2
+getDeviceID	KEYWORD2
+pinMode	KEYWORD2
+digitalRead	KEYWORD2
+digitalWrite	KEYWORD2
+analogRead	KEYWORD2
+analogWrite	KEYWORD2
+setPWMConfig	KEYWORD2
+getPWMMaxValue	KEYWORD2
+update	KEYWORD2
+
+# Deprecated (for backward compatibility)
+pinModeIO	KEYWORD2
+digitalReadIO	KEYWORD2
+digitalWriteIO	KEYWORD2
+analogReadIO	KEYWORD2
+analogWriteIO	KEYWORD2
+
+# Constants
+IO_ANALOG	LITERAL1
+NUM_CHANNELS	LITERAL1
+ADC_MAX_VALUE	LITERAL1
+DEFAULT_ADDRESS	LITERAL1
