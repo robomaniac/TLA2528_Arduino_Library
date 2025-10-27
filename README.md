@@ -13,6 +13,9 @@ Arduino library for the Texas Instruments TLA2528 - an 8-channel, 12-bit ADC wit
 - **💡 Software PWM** - Smooth LED dimming and brightness control
 - **🔄 Efficient Updates** - Batched I²C transactions for optimal performance
 
+<img src="images/Block_Diagram.jpg" alt="Block Diagram" width="400">
+
+
 
 ## 🚀 Quick Start
 
@@ -22,29 +25,58 @@ Arduino library for the Texas Instruments TLA2528 - an 8-channel, 12-bit ADC wit
 
 TLA2528 expander;
 
+const uint8_t BUTTON_PIN = 0;
+const uint8_t LED_PIN = 1;
+const uint8_t PWM_LED_PIN = 2;
+const uint8_t POT_PIN = 3;
+
 void setup() {
+  Serial.begin(115200);
+  delay(500);
+
   Wire.begin();
-  expander.begin();
-  
-  expander.pinMode(0, OUTPUT);      // LED on GPIO0
-  expander.pinMode(1, INPUT);       // Button on GPIO1
-  expander.pinMode(2, IO_ANALOG);   // Sensor on GPIO2
+
+  if (!expander.begin(0x10)) {
+    Serial.println("TLA2528 not detected!");
+    while (1);
+  }
+
+  // Configure pins
+  expander.pinMode(BUTTON_PIN, INPUT);
+  expander.pinMode(LED_PIN, OUTPUT);
+  expander.pinMode(PWM_LED_PIN, OUTPUT);
+  expander.pinMode(POT_PIN, IO_ANALOG);
+
+  // Configure PWM
+  expander.setPWMConfig(100, 256); // 100 Hz, 8-bit resolution (0–255)
+
+  // Start with LEDs off
+  expander.digitalWrite(LED_PIN, LOW);
+  expander.digitalWrite(PWM_LED_PIN, LOW);
+
+  Serial.println("Setup complete.");
 }
 
 void loop() {
-  // Digital I/O
-  bool button = expander.digitalRead(1);
-  expander.digitalWrite(0, button);
-  
-  // Analog input (12-bit: 0-4095)
-  int sensor = expander.analogRead(2);
-  
-  // PWM output (software-generated)
-  int brightness = map(sensor, 0, 4095, 0, 255);
-  expander.analogWrite(0, brightness);
-  
-  expander.update();  // Commit changes
+  // Button (active-low)
+  bool button = expander.digitalRead(BUTTON_PIN);
+  expander.digitalWrite(LED_PIN, button ? LOW : HIGH);
+
+  // Potentiometer (0–4095)
+  int sensor = expander.analogRead(POT_PIN);
+  if (sensor < 0) sensor = 0;
+
+  // Map 12-bit ADC to 8-bit PWM
+  int brightness = map(sensor, 0, 4095, 0, expander.getPWMMaxValue());
+
+  expander.analogWrite(PWM_LED_PIN, brightness);
+
+  // Apply all pending writes
+  expander.update();
+
+  delay(20);
 }
+
 ```
 
 ## 📦 Installation
@@ -67,11 +99,18 @@ void loop() {
 
 todo - schematic
 
+### Hardware
+
+| Name | Image | Link |
+|-----------|-------------|------------------|
+| TLA2528 | <img src="images/Chip.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/texas-instruments/TLA2528IRTER/12328606 |
+| QFN-16 to DIP ADAPTER | <img src="images/QFN.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/schmalztech-llc/ST-QFN-16-3X3-05/24394924 |
+| Decoupling Cap | <img src="images/Capacitor.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/samsung-electro-mechanics/CL10B105KP8NNNC/3887604 |
+
 ### I²C Address Configuration
 
-The TLA2528 address according to datasheet is 0x17 but when I use the I2C scan it return 0x10
+According to table 33 if you connect a 0 ohm resistor between DECAP and ADDR the address is 0x17. I did not connect that short circuit and I use the I2C scan code to detect it's address at 0x10
 - Address `0x10` (default)
-
 
 ### ⚠️ Important Notes
 
@@ -212,16 +251,6 @@ void setup() {
 ## 📈 Performance
 
 todo - will add logic analyzer pictures
-
-| Operation | Typical Time | I²C Transactions |
-|-----------|-------------|------------------|
-| Digital Read | ~150μs | 1 |
-| Digital Write | ~5μs* | 0* |
-| Analog Read | ~200μs | 2 |
-| PWM Update | ~150μs | 0-1 |
-| Full Update | ~150μs | 1 |
-
-*Cached until `update()` is called
 
 ## 🤝 Contributing
 
