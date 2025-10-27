@@ -13,7 +13,7 @@ Arduino library for the Texas Instruments TLA2528 - an 8-channel, 12-bit ADC wit
 - **💡 Software PWM** - Smooth LED dimming and brightness control
 - **🔄 Efficient Updates** - Batched I²C transactions for optimal performance
 
-<img src="images/Block_Diagram.jpg" alt="Block Diagram" width="400">
+<img src="images/Block_Diagram.jpg" alt="Block Diagram" width="700">
 
 
 
