@@ -109,7 +109,7 @@ todo - schematic
 
 ### I²C Address Configuration
 
-According to table 33 if you connect a 0 ohm resistor between DECAP and ADDR the address is 0x17. I did not connect that short circuit and I use the I2C scan code to detect it's address at 0x10
+According to table 2 (page 15) if you connect a 0 ohm resistor between DECAP and ADDR the address is 0x17. I did not connect that resistor (short) and I use the I2C scan code to detect it's address at 0x10
 - Address `0x10` (default)
 
 ### ⚠️ Important Notes
