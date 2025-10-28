@@ -12,6 +12,8 @@
 // Gamma correction for LED brightness
 static constexpr float LED_GAMMA = 2.2;
 
+//Pass Wire1 to the constructor for Nano R4 (3.3V Qwiic)
+//Pass Wire (or nothing) for ESP32 or standard 5V I2C
 TLA2528::TLA2528(TwoWire& wire) : _wire(&wire) {}
 
 bool TLA2528::begin(uint8_t address) {

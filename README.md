@@ -107,6 +107,32 @@ todo - schematic
 | QFN-16 to DIP ADAPTER | <img src="images/QFN.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/schmalztech-llc/ST-QFN-16-3X3-05/24394924 |
 | Decoupling Cap | <img src="images/Capacitor.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/samsung-electro-mechanics/CL10B105KP8NNNC/3887604 |
 
+## Platform-Specific Notes
+
+### ESP32
+```cpp
+TLA2528 expander;  // Uses default Wire
+Wire.begin();      // Or Wire.begin(SDA_PIN, SCL_PIN) for custom pins
+```
+
+### Arduino Nano R4 (WiFi/Minima)
+The Nano R4 has TWO I2C buses:
+- **Wire** - A4/A5 pins (5V logic)
+- **Wire1** - Qwiic connector (3.3V with level shifting) ⭐ Recommended
+
+For 3.3V devices like TLA2528:
+```cpp
+TLA2528 expander(Wire1);  // Use Qwiic connector
+Wire1.begin();
+```
+
+### Other Arduino Boards
+```cpp
+TLA2528 expander;  // Uses default Wire on A4 (SDA) / A5 (SCL)
+Wire.begin();
+```
+
+
 ### I²C Address Configuration
 
 According to table 2 (page 15) if you connect a 0 ohm resistor between DECAP and ADDR the address is 0x17. I did not connect that resistor (short) and I use the I2C scan code to detect it's address at 0x10
