@@ -6,15 +6,67 @@
 
 Arduino library for the Texas Instruments TLA2528 - an 8-channel, 12-bit ADC with GPIO and software PWM capabilities. Transform your I²C bus into a versatile I/O expansion system.
 
+## 📑 Table of Content
+<details>
+<summary>📖 View Table of Contents</summary>
+
+- [TLA2528 Arduino Library](#tla2528-arduino-library)
+  - [📑 Table of Content](#-table-of-content)
+  - [✨ Features](#-features)
+  - [🚀 Quick Start](#-quick-start)
+  - [📦 Installation](#-installation)
+    - [Arduino Library Manager (Recommended)](#arduino-library-manager-recommended)
+    - [Manual Installation](#manual-installation)
+  - [🔌 Hardware Setup](#-hardware-setup)
+    - [Basic Connections](#basic-connections)
+    - [Hardware](#hardware)
+  - [Platform-Specific Notes](#platform-specific-notes)
+    - [ESP32](#esp32)
+    - [Arduino Nano R4 (WiFi/Minima)](#arduino-nano-r4-wifiminima)
+    - [Other Arduino Boards](#other-arduino-boards)
+    - [I²C Address Configuration](#ic-address-configuration)
+    - [⚠️ Important Notes](#️-important-notes)
+  - [⚠️ IMPORTANT: PWM Best Practices](#️-important-pwm-best-practices)
+  - [📖 API Reference](#-api-reference)
+    - [Core Functions](#core-functions)
+      - [`begin(address)`](#beginaddress)
+      - [`pinMode(pin, mode)`](#pinmodepin-mode)
+      - [`update()`](#update)
+    - [Digital I/O](#digital-io)
+      - [`digitalWrite(pin, value)`](#digitalwritepin-value)
+      - [`digitalRead(pin)`](#digitalreadpin)
+    - [Analog I/O](#analog-io)
+      - [`analogRead(pin)`](#analogreadpin)
+      - [`analogWrite(pin, value)`](#analogwritepin-value)
+    - [PWM Configuration](#pwm-configuration)
+      - [`setPWMConfig(frequency, resolution)`](#setpwmconfigfrequency-resolution)
+  - [📊 Examples](#-examples)
+  - [🎯 Use Cases](#-use-cases)
+    - [Not Recommended For:](#not-recommended-for)
+  - [🔧 Advanced Configuration](#-advanced-configuration)
+    - [Custom PWM Settings](#custom-pwm-settings)
+    - [Multiple Devices](#multiple-devices)
+    - [Alternative I²C Bus (ESP32)](#alternative-ic-bus-esp32)
+  - [🐥 Troubleshooting](#-troubleshooting)
+    - [Device Not Found](#device-not-found)
+    - [PWM Flickering](#pwm-flickering)
+    - [Analog Read Issues](#analog-read-issues)
+  - [📈 Performance](#-performance)
+  - [🤝 Contributing](#-contributing)
+  - [📄 License](#-license)
+  - [🙏 Acknowledgments](#-acknowledgments)
+  - [📮 Support](#-support)
+</details>
+
 ## ✨ Features
 
-- **🎯 Simple Arduino-style API** - Familiar `pinMode()`, `digitalWrite()`, `digitalRead()`, `analogWrite()`, `analogRead()` functions
-- **📊 12-bit ADC Resolution** - 4096 levels for precise analog measurements
-- **💡 Software PWM** - Smooth LED dimming and brightness control
-- **🔄 Efficient Updates** - Batched I²C transactions for optimal performance
+
+- **Simple Arduino-style API** - Familiar `pinMode()`, `digitalWrite()`, `digitalRead()`, `analogWrite()`, `analogRead()` functions
+- **12-bit ADC Resolution** - 4096 levels for precise analog measurements
+- **Software PWM** - Smooth LED dimming and brightness control
+- **Efficient Updates** - Batched I²C transactions for optimal performance
 
 <img src="images/Block_Diagram.jpg" alt="Block Diagram" width="700">
-
 
 
 ## 🚀 Quick Start
@@ -23,61 +75,56 @@ Arduino library for the Texas Instruments TLA2528 - an 8-channel, 12-bit ADC wit
 #include <Wire.h>
 #include <TLA2528.h>
 
-TLA2528 expander;
-
+const uint8_t TLA2528_ADDRESS = 0x10;
 const uint8_t BUTTON_PIN = 0;
 const uint8_t LED_PIN = 1;
-const uint8_t PWM_LED_PIN = 2;
-const uint8_t POT_PIN = 3;
+const uint8_t PWM_PIN = 2;
+const uint8_t ANALOG_PIN = 3;
+
+TLA2528 expander;
 
 void setup() {
-  Serial.begin(115200);
-  delay(500);
-
   Wire.begin();
-
-  if (!expander.begin(0x10)) {
-    Serial.println("TLA2528 not detected!");
+  
+  if (!expander.begin(TLA2528_ADDRESS)) {
+    // Handle error
     while (1);
   }
-
+  
   // Configure pins
   expander.pinMode(BUTTON_PIN, INPUT);
   expander.pinMode(LED_PIN, OUTPUT);
-  expander.pinMode(PWM_LED_PIN, OUTPUT);
-  expander.pinMode(POT_PIN, IO_ANALOG);
-
-  // Configure PWM
-  expander.setPWMConfig(100, 256); // 100 Hz, 8-bit resolution (0–255)
-
-  // Start with LEDs off
-  expander.digitalWrite(LED_PIN, LOW);
-  expander.digitalWrite(PWM_LED_PIN, LOW);
-
-  Serial.println("Setup complete.");
+  expander.pinMode(PWM_PIN, OUTPUT);
+  expander.pinMode(ANALOG_PIN, IO_ANALOG);
+  
+  // Configure PWM: 100Hz, 8-bit (0-255)
+  expander.setPWMConfig(100, 256);
 }
 
 void loop() {
-  // Button (active-low)
-  bool button = expander.digitalRead(BUTTON_PIN);
-  expander.digitalWrite(LED_PIN, button ? LOW : HIGH);
-
-  // Potentiometer (0–4095)
-  int sensor = expander.analogRead(POT_PIN);
-  if (sensor < 0) sensor = 0;
-
-  // Map 12-bit ADC to 8-bit PWM
-  int brightness = map(sensor, 0, 4095, 0, expander.getPWMMaxValue());
-
-  expander.analogWrite(PWM_LED_PIN, brightness);
-
-  // Apply all pending writes
+  // Digital read
+  bool buttonState = expander.digitalRead(BUTTON_PIN);
+  
+  // Digital write
+  expander.digitalWrite(LED_PIN, buttonState);
+  
+  // Analog read (12-bit: 0-4095)
+  int analogValue = expander.analogRead(ANALOG_PIN);
+  
+  // Analog write (PWM)
+  int brightness = map(analogValue, 0, 4095, 0, 255);
+  expander.analogWrite(PWM_PIN, brightness);
+  
+  // Apply all changes
   expander.update();
-
-  delay(20);
 }
-
 ```
+
+📖 For a complete, working example** with platform auto-detection (ESP32, Nano R4, Arduino), smooth non-blocking PWM, and proper error handling, see [TLA2528_DigitalReadWrite.ino](examples/TLA2528_DigitalReadWrite/TLA2528_DigitalReadWrite.ino).
+
+⚠️ **Important:** For smooth PWM operation, call `update()` continuously without blocking delays. See the example for the proper non-blocking pattern.
+
+
 
 ## 📦 Installation
 
@@ -101,8 +148,8 @@ todo - schematic
 
 ### Hardware
 
-| Name | Image | Link |
-|-----------|-------------|------------------|
+| Component | Image | Supplier Link |
+|-----------|-------|---------------|
 | TLA2528 | <img src="images/Chip.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/texas-instruments/TLA2528IRTER/12328606 |
 | QFN-16 to DIP ADAPTER | <img src="images/QFN.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/schmalztech-llc/ST-QFN-16-3X3-05/24394924 |
 | Decoupling Cap | <img src="images/Capacitor.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/samsung-electro-mechanics/CL10B105KP8NNNC/3887604 |
@@ -132,11 +179,20 @@ TLA2528 expander;  // Uses default Wire on A4 (SDA) / A5 (SCL)
 Wire.begin();
 ```
 
-
 ### I²C Address Configuration
 
-According to table 2 (page 15) if you connect a 0 ohm resistor between DECAP and ADDR the address is 0x17. I did not connect that resistor (short) and I use the I2C scan code to detect it's address at 0x10
-- Address `0x10` (default)
+The TLA2528 supports two addresses based on the ADDR pin connection:
+
+| ADDR Connection | I²C Address | Notes |
+|----------------|-------------|--------|
+| **Floating (default)** | **0x10** | Most common, used in examples |
+| ADDR → DECAP | 0x17 | Requires 0Ω resistor short |
+
+**To find your device address**, run an I²C scanner sketch before using the library.
+
+I need to do proper PCB to be able to test this out correctly. I similated that 0 ohm and still get 0x10.
+ <img src="images/i2c_address_selector.jpg" alt="I2C selector" width="600">
+
 
 ### ⚠️ Important Notes
 
@@ -149,6 +205,34 @@ According to table 2 (page 15) if you connect a 0 ohm resistor between DECAP and
    - Higher frequencies may flicker
    - Not suitable for motor control
    - Use hardware PWM for critical applications
+
+## ⚠️ IMPORTANT: PWM Best Practices
+
+For smooth PWM operation, **never use `delay()` in your main loop**. The `update()` function must be called continuously (ideally every 1-2ms) for flicker-free dimming.
+
+❌ **Wrong** (causes flickering):
+```cpp
+void loop() {
+  expander.update();
+  delay(20);  // Blocks PWM updates!
+}
+```
+
+✅ **Correct** (smooth operation):
+```cpp
+void loop() {
+  // Read sensors periodically using millis()
+  if (millis() - lastRead >= 50) {
+    lastRead = millis();
+    // ... read sensors ...
+  }
+  
+  expander.update();  // Called continuously!
+}
+```
+
+See examples for complete non-blocking patterns.
+
 
 ## 📖 API Reference
 
