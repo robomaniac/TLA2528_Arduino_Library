@@ -18,7 +18,10 @@
 #include <Wire.h>
 #include <TLA2528.h>
 
+// I2C Address
 const uint8_t TLA2528_ADDRESS = 0x10;
+
+// // Pin Definitions
 const uint8_t BUTTON_PIN = 0;
 const uint8_t LED_PIN = 1;
 const uint8_t PWM_LED_PIN = 2;
