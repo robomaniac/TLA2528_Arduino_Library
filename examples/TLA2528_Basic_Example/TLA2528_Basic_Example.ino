@@ -34,55 +34,59 @@ const uint8_t BLINK_PIN = 4;     // Activity blink LED
 const uint32_t DEBOUNCE_DELAY = 20;     // Button debounce time
 const uint32_t BLINK_INTERVAL = 200;    // Blink rate
 
-// Create TLA2528 instance
-TLA2528 expander;
+// Auto-detect platform and use correct I2C bus
+#if defined(ARDUINO_UNOR4_WIFI) || defined(ARDUINO_UNOR4_MINIMA)
+  TLA2528 expander(Wire1);
+  #define I2C_BUS Wire1
+  #define BOARD_NAME "Arduino Nano R4"
+#else
+  TLA2528 expander;
+  #define I2C_BUS Wire
+  #define BOARD_NAME "Default (Wire)"
+#endif
 
 // State Variables
 struct {
-  // Button debouncing
   uint32_t lastDebounceTime = 0;
   bool lastButtonReading = HIGH;
   bool buttonState = HIGH;
   bool ledState = false;
-  
-  // Blink control
+
   uint32_t lastBlinkTime = 0;
   bool blinkState = false;
-  
-  // Analog filtering
+
   int lastPotValue = -1;
   int currentBrightness = 0;
 } state;
 
-// Helper function for Arduino boards without map()
-long map(long x, long in_min, long in_max, long out_min, long out_max) {
-  if (in_max == in_min) return out_min;
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-
 void setup() {
   Serial.begin(115200);
-  delay(2000);  // Wait for Serial Monitor
   
+  #if defined(ARDUINO_UNOR4_WIFI) || defined(ARDUINO_UNOR4_MINIMA)
+    for (auto startNow = millis() + 2500; !Serial && millis() < startNow; delay(500));
+  #else
+    delay(2000);
+  #endif
+
   printHeader();
-  
+
   Serial.println("Initializing I2C...");
-  Wire.begin();
-  delay(100);
-  
+  I2C_BUS.begin();
+  I2C_BUS.setClock(400000); // Standard 400kHz you can try 100khz if you have issue or simply unplug and plug qwiic connector or power cycle
+
   Serial.println("Initializing TLA2528...");
   if (!expander.begin(TLA2528_ADDRESS)) {
     Serial.println("ERROR: Failed to initialize TLA2528!");
     Serial.println("Check I2C connections and pull-up resistors.");
     while (1) delay(100);
   }
-  
+
   Serial.print("SUCCESS: Device ID = 0x");
   Serial.println(expander.getDeviceID(), HEX);
-  
+
   configurePins();
   configurePWM();
-  
+
   Serial.println("\n--- Setup Complete ---");
   Serial.println("Button  -> Status LED");
   Serial.println("Pot     -> PWM LED brightness");
@@ -92,25 +96,23 @@ void setup() {
 
 void configurePins() {
   Serial.println("Configuring pins...");
-  
-  expander.pinMode(BUTTON_PIN, INPUT);    // Button input
-  expander.pinMode(LED_PIN, OUTPUT);      // Status LED
-  expander.pinMode(PWM_LED_PIN, OUTPUT);  // PWM LED
-  expander.pinMode(POT_PIN, IO_ANALOG);   // Analog input
-  expander.pinMode(BLINK_PIN, OUTPUT);    // Blink LED
-  
-  // Start with LEDs off
+
+  expander.pinMode(BUTTON_PIN, INPUT);
+  expander.pinMode(LED_PIN, OUTPUT);
+  expander.pinMode(PWM_LED_PIN, OUTPUT);
+  expander.pinMode(POT_PIN, IO_ANALOG);
+  expander.pinMode(BLINK_PIN, OUTPUT);
+
   expander.digitalWrite(LED_PIN, LOW);
   expander.digitalWrite(PWM_LED_PIN, LOW);
   expander.digitalWrite(BLINK_PIN, LOW);
-  
+
   Serial.println("Pins configured");
 }
 
 void configurePWM() {
   Serial.println("Configuring PWM...");
   
-  // Use default 100Hz, 8-bit PWM
   if (expander.setPWMConfig(100, 256)) {
     Serial.print("PWM: 100Hz, 8-bit (0-");
     Serial.print(expander.getPWMMaxValue());
@@ -122,20 +124,14 @@ void configurePWM() {
 
 void loop() {
   uint32_t now = millis();
-  
-  // Handle button input
+
   handleButton(now);
-  
-  // Update blink LED
   updateBlink(now);
-  
-  // Read analog and control PWM
   handleAnalogPWM();
-  
-  // Commit all changes to device
+
   if (!expander.update()) {
     static uint32_t lastError = 0;
-    if (now - lastError > 1000) {  // Limit error messages
+    if (now - lastError > 1000) {
       Serial.println("Warning: I2C update failed");
       lastError = now;
     }
@@ -144,29 +140,22 @@ void loop() {
 
 void handleButton(uint32_t now) {
   bool reading = expander.digitalRead(BUTTON_PIN);
-  
-  // Reset debounce timer on state change
-  if (reading != state.lastButtonReading) {
-    state.lastDebounceTime = now;
-  }
-  
-  // Check if reading is stable
+
+  if (reading != state.lastButtonReading) state.lastDebounceTime = now;
+
   if ((now - state.lastDebounceTime) > DEBOUNCE_DELAY) {
-    // State has been stable long enough
     if (reading != state.buttonState) {
       state.buttonState = reading;
-      
-      // Toggle LED on button press (active LOW)
       if (state.buttonState == LOW) {
         state.ledState = !state.ledState;
         expander.digitalWrite(LED_PIN, state.ledState);
-        
+
         Serial.print("Button pressed - LED ");
         Serial.println(state.ledState ? "ON" : "OFF");
       }
     }
   }
-  
+
   state.lastButtonReading = reading;
 }
 
@@ -179,25 +168,18 @@ void updateBlink(uint32_t now) {
 }
 
 void handleAnalogPWM() {
-  // Read 12-bit analog value
   int potValue = expander.analogRead(POT_PIN);
-  
+
   if (potValue < 0) {
-    // Error reading analog
     expander.analogWrite(PWM_LED_PIN, 0);
     return;
   }
-  
-  // Map to PWM range
+
   int targetBrightness = map(potValue, 0, 4095, 0, expander.getPWMMaxValue());
-  
-  // Smooth the brightness changes
   state.currentBrightness += (targetBrightness - state.currentBrightness) / 4;
-  
-  // Apply PWM
+
   expander.analogWrite(PWM_LED_PIN, state.currentBrightness);
-  
-  // Debug output (filtered to reduce spam)
+
   if (abs(potValue - state.lastPotValue) > 50) {
     Serial.print("Analog: ");
     Serial.print(potValue);
