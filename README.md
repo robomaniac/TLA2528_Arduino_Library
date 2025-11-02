@@ -144,7 +144,7 @@ void loop() {
 
 ### Basic Connections
 
-todo - schematic
+TODO - Add schematic
 
 ### Hardware
 
@@ -190,7 +190,8 @@ The TLA2528 supports two addresses based on the ADDR pin connection:
 
 **To find your device address**, run an I²C scanner sketch before using the library.
 
-I need to do proper PCB to be able to test this out correctly. I similated that 0 ohm and still get 0x10.
+Confirmed: 0x17 works.
+
  <img src="images/i2c_address_selector.jpg" alt="I2C selector" width="600">
 
 
@@ -360,7 +361,7 @@ void setup() {
 
 ## 📈 Performance
 
-todo - will add logic analyzer pictures
+TODO - Add logic analyzer pictures
 
 ## 🤝 Contributing
 
@@ -378,7 +379,7 @@ This library is released under the MIT License. See [LICENSE](LICENSE) file for 
 
 ## 🙏 Acknowledgments
 
-- Gemini and Claude for vibe coding this as you can tell from this amazing readme
+Thanks to Gemini and Claude for contributing to this README. 
 
 ## 📮 Support
 
