@@ -146,6 +146,7 @@ void loop() {
 
 TODO - Add schematic
 
+
 ### Hardware
 
 | Component | Image | Supplier Link |
@@ -153,6 +154,23 @@ TODO - Add schematic
 | TLA2528 | <img src="images/Chip.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/texas-instruments/TLA2528IRTER/12328606 |
 | QFN-16 to DIP ADAPTER | <img src="images/QFN.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/schmalztech-llc/ST-QFN-16-3X3-05/24394924 |
 | Decoupling Cap | <img src="images/Capacitor.jpg" alt="TLA2528" width="100"> | https://www.digikey.com/en/products/detail/samsung-electro-mechanics/CL10B105KP8NNNC/3887604 |
+
+
+<img src="images/breadboard.jpg" alt="breadboard 0x17" width="600"> 
+
+Fore reference, this breadboard use these pins and I shorted ADDR to DECAP so I2C address is 0x17
+
+```cpp
+// I2C Address
+const uint8_t TLA2528_ADDRESS = 0x17;
+
+// Pin Definitions
+const uint8_t BUTTON_PIN = 2;    // Button input (needs external pull-up)
+const uint8_t LED_PIN = 5;       // Status LED output
+const uint8_t PWM_LED_PIN = 0;   // PWM controlled LED
+const uint8_t POT_PIN = 1;       // Potentiometer analog input
+const uint8_t BLINK_PIN = 7;     // Activity blink LED
+```
 
 ## Platform-Specific Notes
 
